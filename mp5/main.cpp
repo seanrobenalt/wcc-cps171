@@ -32,10 +32,10 @@ int main() {
     alphabet.erase(remove(alphabet.begin(), alphabet.end(), keyword[i]), alphabet.end());
   }
 
-  // make the string that will be converted to the two dimensional array
+  // initialize the string that will be converted to the two dimensional array
   string string_for_two_dimensional_array = keyword + alphabet;
 
-  // loop through the 25 character string_for_two_dimensional_array, makking each 5 characters its own string
+  // loop through the above string, making each 5 characters its own string, which will be a row
   string rows[5];
   for (int row_parser = 0; row_parser < 5; row_parser++) {
     string row = string_for_two_dimensional_array.substr(0, 5);
@@ -44,13 +44,13 @@ int main() {
     rows[row_parser] = row;
   }
 
-  // print first row of output
+  // print first row of table
   cout << "   0 1 2 3 4" << "\n";
 
   // initialize two dimensional array
-  char encryptkey[5][5];
+  char encryptkey_table[5][5];
 
-  // initialize maps that will store location of each char
+  // initialize maps that will store location of each char for decrypting/encrypting later on
   map<char,int> char_row_location;
   map<char, int> char_column_location;
 
@@ -62,22 +62,22 @@ int main() {
     row_to_print += to_string(i);
     row_to_print += "  ";
 
-    // convert the char to an array
+    // convert the 5 character string to an array
     int n = rows[i].length();
-    char inner_array[n];
-    strcpy(inner_array, rows[i].c_str());
+    char row_as_array[n];
+    strcpy(row_as_array, rows[i].c_str());
 
-    // loop through the char as an array, add it to the string to print and the two dimensional array
+    // loop through the 5 character string as an array, add it to the string to print and the two dimensional array
     for (int j = 0; j < n; j++) {
-      row_to_print += inner_array[j];
+      row_to_print += row_as_array[j];
       row_to_print += " ";
-      encryptkey[i][j] = inner_array[j];
+
+			encryptkey_table[i][j] = row_as_array[j];
 
       // update the row and column maps so we know the row and column of each char
-      char_row_location[inner_array[j]] = i;
-      char_column_location[inner_array[j]] = j;
+      char_row_location[row_as_array[j]] = i;
+      char_column_location[row_as_array[j]] = j;
     }
-    // print out the row
     cout << row_to_print << "\n";
   }
 
@@ -92,10 +92,13 @@ int main() {
 
       cout << "****************************************\n";
       cout << line_for_encryption << "\n";
-      string message = "";
-      string new_letter;
 
-      if (compare_chars(decrypt_or_encrypt, 'E') == 0)
+			// initialize the string that will print the encrypted/decrypted message
+			string message = "";
+
+			bool is_encrypt = compare_chars(decrypt_or_encrypt, 'E') == 0;
+
+      if (is_encrypt)
         cout << "encrypts to\n";
       else
         cout << "decrypts to\n";
@@ -105,11 +108,13 @@ int main() {
         bool is_space = compare_chars(line_for_encryption[i], ' ') == 0;
         bool is_dash = compare_chars(line_for_encryption[i], '-') == 0;
         bool is_apostrophe = compare_chars(line_for_encryption[i], '\'') == 0;
-        bool is_encrypt = compare_chars(decrypt_or_encrypt, 'E') == 0;
-        bool two_dimensional_array_contains_char = ((keyword + alphabet).find(toupper(line_for_encryption[i])) != string::npos);
+        bool encryptkey_table_contains_char = ((keyword + alphabet).find(toupper(line_for_encryption[i])) != string::npos);
 
-        if (two_dimensional_array_contains_char) {
-          if (is_space) {
+				// only encrypt/decrypt the char if it's in the encryptkey_table
+        if (encryptkey_table_contains_char) {
+
+					// leave spaces, dashes and apostrophes as is
+					if (is_space) {
             message += " ";
           } else if (is_dash) {
             message += "-";
@@ -117,21 +122,25 @@ int main() {
             message += '\'';
           }
 
+					// convert char to upper if we are encrypting
           if (is_encrypt)
             line_for_encryption[i] = toupper(line_for_encryption[i]);
 
+					// if char is not a space, dash or apostrophe then use the maps we made to find the row & column of the char
           if (is_space == false && is_dash == false && is_apostrophe == false) {
             int row_location = char_row_location[line_for_encryption[i]];
             int column_location = char_column_location[line_for_encryption[i]];
 
+						// add to the message in upper case if we are encrypting, convert to lower for decrypting
             if (is_encrypt)
-              message += encryptkey[column_location][row_location];
+              message += encryptkey_table[column_location][row_location];
             else
-              message += tolower(encryptkey[column_location][row_location]);
+              message += tolower(encryptkey_table[column_location][row_location]);
 
           }
 
         } else {
+					// if char not found in encryptkey_table, add it as is to the encrypted/decrypted message
           message += line_for_encryption[i];
         }
 
