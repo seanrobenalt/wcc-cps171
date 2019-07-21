@@ -2,7 +2,15 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <map>
 using namespace std;
+
+int compare_chars(char a,char b) {
+	if (a == b)
+		return 0;
+	else
+		return -1;
+}
 
 int main() {
   cout << "CPS171 - Machine Problem 5 - Arrays by Sean Robenalt\n\n";
@@ -20,8 +28,8 @@ int main() {
 
   // delete chars in the alphabet that are found in the keyword
   string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXY";
-  for (int it = 0; it < keyword.length(); it++) {
-    alphabet.erase(remove(alphabet.begin(), alphabet.end(), keyword[it]), alphabet.end());
+  for (int i = 0; i < keyword.length(); i++) {
+    alphabet.erase(remove(alphabet.begin(), alphabet.end(), keyword[i]), alphabet.end());
   }
 
   // make the string that will be converted to the two dimensional array
@@ -42,6 +50,10 @@ int main() {
   // initialize two dimensional array
   char encryptkey[5][5];
 
+  // initialize maps that will store location of each char
+  map<char,int> char_row_location;
+  map<char, int> char_column_location;
+
   // loop through the rows array that contains 5 strings of 5 chars
   for (int i = 0; i < (sizeof(rows) / sizeof(rows[0])); i++) {
 
@@ -60,6 +72,10 @@ int main() {
       row_to_print += inner_array[j];
       row_to_print += " ";
       encryptkey[i][j] = inner_array[j];
+
+      // update the row and column maps so we know the row and column of each char
+      char_row_location[inner_array[j]] = i;
+      char_column_location[inner_array[j]] = j;
     }
     // print out the row
     cout << row_to_print << "\n";
@@ -67,12 +83,60 @@ int main() {
 
   // continue reading the file, and decrypting or encrypting the lines
   string line_for_encryption;
-  while(getline(encryptfile, line_for_encryption)) {
+  while (getline(encryptfile, line_for_encryption)) {
     if (line_for_encryption != keyword) {
 
       // determine if we are decrypting or encrypting, then delete that char
       char decrypt_or_encrypt = line_for_encryption.front();
       line_for_encryption.erase(0, 2);
+
+      cout << "****************************************\n";
+      cout << line_for_encryption << "\n";
+      string message = "";
+      string new_letter;
+
+      if (compare_chars(decrypt_or_encrypt, 'E') == 0)
+        cout << "encrypts to\n";
+      else
+        cout << "decrypts to\n";
+
+      for (int i = 0; i < line_for_encryption.length(); i++) {
+
+        bool is_space = compare_chars(line_for_encryption[i], ' ') == 0;
+        bool is_dash = compare_chars(line_for_encryption[i], '-') == 0;
+        bool is_apostrophe = compare_chars(line_for_encryption[i], '\'') == 0;
+        bool is_encrypt = compare_chars(decrypt_or_encrypt, 'E') == 0;
+        bool two_dimensional_array_contains_char = ((keyword + alphabet).find(toupper(line_for_encryption[i])) != string::npos);
+
+        if (two_dimensional_array_contains_char) {
+          if (is_space) {
+            message += " ";
+          } else if (is_dash) {
+            message += "-";
+          } else if (is_apostrophe) {
+            message += '\'';
+          }
+
+          if (is_encrypt)
+            line_for_encryption[i] = toupper(line_for_encryption[i]);
+
+          if (is_space == false && is_dash == false && is_apostrophe == false) {
+            int row_location = char_row_location[line_for_encryption[i]];
+            int column_location = char_column_location[line_for_encryption[i]];
+
+            if (is_encrypt)
+              message += encryptkey[column_location][row_location];
+            else
+              message += tolower(encryptkey[column_location][row_location]);
+
+          }
+
+        } else {
+          message += line_for_encryption[i];
+        }
+
+      }
+      cout << message << "\n";
     }
   }
 
